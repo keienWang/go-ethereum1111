@@ -219,8 +219,8 @@ func HexToAddress(s string) Address { return BytesToAddress(FromHex(s)) }
 // IsHexAddress verifies whether a string can represent a valid hex-encoded
 // Ethereum address or not.
 func IsHexAddress(s string) bool {
-	if has0xPrefix(s) {
-		s = s[2:]
+	if hasDmocPrefix(s) {
+		s = s[4:]
 	}
 	return len(s) == 2*AddressLength && isHex(s)
 }
@@ -308,7 +308,7 @@ func (a *Address) SetBytes(b []byte) {
 
 // MarshalText returns the hex representation of a.
 func (a Address) MarshalText() ([]byte, error) {
-	return hexutil.Bytes(a[:]).MarshalText()
+	return hexutil.Bytes(a[:]).MarshalAddress()
 }
 
 // UnmarshalText parses a hash in hex syntax.

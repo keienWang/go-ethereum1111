@@ -174,8 +174,8 @@ func (a *Address) GetBytes() []byte {
 // SetHex sets the specified hex string as the address value.
 func (a *Address) SetHex(address string) error {
 	address = strings.ToLower(address)
-	if len(address) >= 2 && address[:2] == "0x" {
-		address = address[2:]
+	if len(address) >= 2 && address[:4] == "dmoc" {
+		address = address[4:]
 	}
 	if length := len(address); length != 2*common.AddressLength {
 		return fmt.Errorf("invalid address hex length: %v != %v", length, 2*common.AddressLength)

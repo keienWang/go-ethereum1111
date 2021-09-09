@@ -27,6 +27,10 @@ func FromHex(s string) []byte {
 	if has0xPrefix(s) {
 		s = s[2:]
 	}
+	if hasDmocPrefix(s){
+		s = s[4:]
+	}
+
 	if len(s)%2 == 1 {
 		s = "0" + s
 	}
@@ -47,6 +51,9 @@ func CopyBytes(b []byte) (copiedBytes []byte) {
 // has0xPrefix validates str begins with '0x' or '0X'.
 func has0xPrefix(str string) bool {
 	return len(str) >= 2 && str[0] == '0' && (str[1] == 'x' || str[1] == 'X')
+}
+func hasDmocPrefix(str string)bool{
+	return len(str) >= 4 && (str[0] == 'd' || str[0] == 'D') && (str[1] == 'm' || str[1] == 'M') && (str[2] == 'o' || str[2] == 'O') && (str[3] == 'c' || str[3] == 'C')
 }
 
 // isHexCharacter returns bool of c being a valid hexadecimal.

@@ -44,6 +44,13 @@ func (b Bytes) MarshalText() ([]byte, error) {
 	return result, nil
 }
 
+func (b Bytes) MarshalAddress() ([]byte, error) {
+	result := make([]byte, len(b)*2+4)
+	copy(result, `dmoc`)
+	hex.Encode(result[4:], b)
+	return result, nil
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 func (b *Bytes) UnmarshalJSON(input []byte) error {
 	if !isString(input) {
@@ -331,6 +338,10 @@ func isString(input []byte) bool {
 func bytesHave0xPrefix(input []byte) bool {
 	return len(input) >= 2 && input[0] == '0' && (input[1] == 'x' || input[1] == 'X')
 }
+func bytesHaveDmocPrefix(input []byte) bool {
+	return len(input) >= 4 && (input[0] == 'd' || input[0] == 'D') && (input[1] == 'm' || input[1] == 'M') && (input[2] == 'o' || input[2] == 'O') && (input[3] == 'c' || input[3] == 'C')
+
+}
 
 func checkText(input []byte, wantPrefix bool) ([]byte, error) {
 	if len(input) == 0 {
@@ -338,7 +349,9 @@ func checkText(input []byte, wantPrefix bool) ([]byte, error) {
 	}
 	if bytesHave0xPrefix(input) {
 		input = input[2:]
-	} else if wantPrefix {
+	} else if bytesHaveDmocPrefix(input) {
+		input = input[4:]
+	}else if wantPrefix {
 		return nil, ErrMissingPrefix
 	}
 	if len(input)%2 != 0 {
@@ -351,8 +364,15 @@ func checkNumberText(input []byte) (raw []byte, err error) {
 	if len(input) == 0 {
 		return nil, nil // empty strings are allowed
 	}
-	if !bytesHave0xPrefix(input) {
-		return nil, ErrMissingPrefix
+
+	if !bytesHaveDmocPrefix(input){
+		if !bytesHave0xPrefix(input) {
+			return nil, ErrMissingPrefix
+		}
+		return nil,ErrMissingDmocPrefix
+	}
+	if bytesHaveDmocPrefix(input) {
+		input = input[4:]
 	}
 	input = input[2:]
 	if len(input) == 0 {
