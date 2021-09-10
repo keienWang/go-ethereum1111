@@ -41,16 +41,16 @@ const uintBits = 32 << (uint64(^uint(0)) >> 63)
 
 // Errors
 var (
-	ErrEmptyString   = &decError{"empty hex string"}
-	ErrSyntax        = &decError{"invalid hex string"}
-	ErrMissingPrefix = &decError{"hex string without 0x prefix"}
-	ErrMissingDmocPrefix = &decError{"hex string without 0x prefix"}
-	ErrOddLength     = &decError{"hex string of odd length"}
-	ErrEmptyNumber   = &decError{"hex string \"0x\""}
-	ErrLeadingZero   = &decError{"hex number with leading zero digits"}
-	ErrUint64Range   = &decError{"hex number > 64 bits"}
-	ErrUintRange     = &decError{fmt.Sprintf("hex number > %d bits", uintBits)}
-	ErrBig256Range   = &decError{"hex number > 256 bits"}
+	ErrEmptyString       = &decError{"empty hex string"}
+	ErrSyntax            = &decError{"invalid hex string"}
+	ErrMissingPrefix     = &decError{"hex string without 0x prefix"}
+	ErrMissingDmocPrefix = &decError{"hex string without Dmoc prefix"}
+	ErrOddLength         = &decError{"hex string of odd length"}
+	ErrEmptyNumber       = &decError{"hex string \"0x\""}
+	ErrLeadingZero       = &decError{"hex number with leading zero digits"}
+	ErrUint64Range       = &decError{"hex number > 64 bits"}
+	ErrUintRange         = &decError{fmt.Sprintf("hex number > %d bits", uintBits)}
+	ErrBig256Range       = &decError{"hex number > 256 bits"}
 )
 
 type decError struct{ msg string }
@@ -59,32 +59,29 @@ func (err decError) Error() string { return err.msg }
 
 // Decode decodes a hex string with 0x prefix.
 func Decode(input string) ([]byte, error) {
+
 	if len(input) == 0 {
 		return nil, ErrEmptyString
 	}
-
-		if !hasDmocPrefix(input){
-			if !has0xPrefix(input) {
-				return nil, ErrMissingPrefix
-		}
-			return nil,ErrMissingDmocPrefix
-	}
-	if has0xPrefix(input){
+	if !has0xPrefix(input) {
+		if !hasDmocPrefix(input) {
+			return nil, ErrMissingDmocPrefix
+		} else if hasDmocPrefix(input) {
+			b, err := hex.DecodeString(input[4:])
+			if err != nil {
+				err = mapError(err)
+			}
+			return b, err
+		} else {
+			return nil, ErrMissingPrefix
+		} //
+	} else {
 		b, err := hex.DecodeString(input[2:])
 		if err != nil {
 			err = mapError(err)
 		}
 		return b, err
 	}
-	if hasDmocPrefix(input){
-		b, err := hex.DecodeString(input[4:])
-		if err != nil {
-			err = mapError(err)
-		}
-		return b, err
-	}
-	return nil, ErrMissingPrefix
-
 }
 
 // MustDecode decodes a hex string with 0x prefix. It panics for invalid input.
@@ -204,7 +201,7 @@ func EncodeBig(bigint *big.Int) string {
 func has0xPrefix(input string) bool {
 	return len(input) >= 2 && input[0] == '0' && (input[1] == 'x' || input[1] == 'X')
 }
-func hasDmocPrefix(str string)bool{
+func hasDmocPrefix(str string) bool {
 	return len(str) >= 4 && (str[0] == 'd' || str[0] == 'D') && (str[1] == 'm' || str[1] == 'M') && (str[2] == 'o' || str[2] == 'O') && (str[3] == 'c' || str[3] == 'C')
 }
 
@@ -212,15 +209,13 @@ func checkNumber(input string) (raw string, err error) {
 	if len(input) == 0 {
 		return "", ErrEmptyString
 	}
-	if !hasDmocPrefix(input){
-		if !has0xPrefix(input) {
-			return "", ErrMissingPrefix
-		}
-		return "" , ErrMissingDmocPrefix
+
+	if !hasDmocPrefix(input) && !has0xPrefix(input) {
+		return "", ErrMissingPrefix
 	}
-	if hasDmocPrefix(input){
+	if hasDmocPrefix(input) {
 		input = input[4:]
-	}else {
+	} else {
 		input = input[2:]
 	}
 
