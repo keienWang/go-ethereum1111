@@ -351,7 +351,7 @@ func checkText(input []byte, wantPrefix bool) ([]byte, error) {
 		input = input[2:]
 	} else if bytesHaveDmocPrefix(input) {
 		input = input[4:]
-	}else if wantPrefix {
+	} else if wantPrefix {
 		return nil, ErrMissingPrefix
 	}
 	if len(input)%2 != 0 {
@@ -365,16 +365,19 @@ func checkNumberText(input []byte) (raw []byte, err error) {
 		return nil, nil // empty strings are allowed
 	}
 
-	if !bytesHaveDmocPrefix(input){
-		if !bytesHave0xPrefix(input) {
+	if !bytesHave0xPrefix(input) {
+		if !bytesHaveDmocPrefix(input) {
+			return nil, ErrMissingDmocPrefix
+		} else if bytesHaveDmocPrefix(input) {
+			input = input[4:]
+		} else {
 			return nil, ErrMissingPrefix
 		}
-		return nil,ErrMissingDmocPrefix
 	}
-	if bytesHaveDmocPrefix(input) {
-		input = input[4:]
+	if bytesHave0xPrefix(input) {
+		input = input[2:]
 	}
-	input = input[2:]
+
 	if len(input) == 0 {
 		return nil, ErrEmptyNumber
 	}
